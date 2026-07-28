@@ -12,7 +12,6 @@ Trong vai trò Role 4, tôi chịu trách nhiệm chính về tích hợp lõi A
 
 - **Module thực hiện**:
   - `src/app.py`
-  - `streamlit_app.py` (thêm giao diện demo Streamlit để tương tác và kiểm tra nhanh)
 
 - **Những điểm nổi bật trong mã**:
   - Triển khai hàm `run_baseline_chatbot(user_query, provider)` để chạy luồng Chatbot Baseline với LLM chọn lọc, không gọi công cụ.
@@ -30,7 +29,7 @@ Trong vai trò Role 4, tôi chịu trách nhiệm chính về tích hợp lõi A
   - Xây dựng `streamlit_app.py` để tạo UI demo: lựa chọn nhà cung cấp LLM, chọn câu mẫu, và chạy cả hai luồng Baseline và ReAct.
 
 - **Tài liệu**:
-  - Cập nhật `README.md` để hướng dẫn chạy demo Streamlit.
+  - Cập nhật report cá nhân và nhóm
   - Ghi chú cách `src/app.py` tải bộ test từ `config/test_cases.json` và cách khởi tạo provider `get_llm_provider()`.
   - UI demo dùng lại hàm trong `src/app.py`, giúp kiểm chứng rõ ràng phần lõi agent của Role 4.
 
