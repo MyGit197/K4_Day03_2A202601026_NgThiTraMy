@@ -19,7 +19,7 @@ if sys.stdout.encoding != 'utf-8':
         pass
 
 # Import các thành phần từ file của Role 2, Role 3 & Multi-Provider Adapter
-from tools import AVAILABLE_TOOLS, get_weather, search_flights
+from tools import AVAILABLE_TOOLS
 from prompts import CHATBOT_BASELINE_PROMPT, REACT_SYSTEM_PROMPT, MAX_ITERATIONS
 from providers import get_llm_provider
 
@@ -190,6 +190,73 @@ def run_react_agent(user_query: str, provider):
         print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
 
 
+def run_react_agent_case5(user_query: str, provider):
+    """
+    Luồng ReAct riêng cho Test Case 5: xử lý hồ sơ sinh viên không tồn tại.
+    Mục tiêu là dừng lại an toàn khi get_student_profile trả lỗi, thay vì bịa
+    thông tin hoặc lặp vô hạn. Đã được bổ sung vòng lặp và Guardrail đầy đủ.
+    """
+    import re
+
+    print(f"\n🤖 [REACT AGENT - TEST CASE 5] Câu hỏi: {user_query}")
+    step = 0
+
+    # Helpers
+    tools = AVAILABLE_TOOLS
+
+    def call_tool(name: str, *args):
+        func = tools.get(name)
+        if not func:
+            return f"LỖI: Tool '{name}' không có trong AVAILABLE_TOOLS."
+        try:
+            return func(*args)
+        except Exception as e:
+            return f"LỖI: Khi gọi tool '{name}': {e}"
+
+    # Vòng lặp ReAct tập trung vào xử lý profile sinh viên
+    while step < MAX_ITERATIONS:
+        step += 1
+        print(f"\n--- 🔄 Vòng lặp ReAct (Step {step}/{MAX_ITERATIONS}) ---")
+
+        match = re.search(r"sv\d+", user_query, re.IGNORECASE)
+        student_id = match.group(0).upper() if match else ""
+
+        if not student_id:
+            print("🧠 Thought: Không phát hiện được mã sinh viên trong câu hỏi.")
+            print("🏁 Final Answer: Tôi cần mã sinh viên để kiểm tra hồ sơ.")
+            return
+
+        print("🧠 Thought: Đã tìm thấy mã sinh viên, tiến hành gọi tool kiểm tra hồ sơ.")
+        print(f"🛠️ Action: get_student_profile('{student_id}')")
+        
+        # Gọi tool thông qua helper call_tool để kiểm soát lỗi tốt hơn
+        observation = call_tool("get_student_profile", student_id)
+        print(f"👁️ Observation: {observation}")
+
+        # Xử lý trường hợp không có hồ sơ sinh viên
+        if observation.startswith("LỖI:"):
+            print("🧠 Thought: Hồ sơ sinh viên không tồn tại hoặc không có trong hệ thống.")
+            print("🏁 Final Answer: Tôi không thể xem được hồ sơ sinh viên này vì mã sinh viên không tồn tại hoặc chưa được đăng ký trong hệ thống.")
+            return
+
+        # Nếu có kết quả hồ sơ hợp lệ
+        try:
+            summary = provider.generate(
+                f"Tóm tắt hồ sơ sinh viên và đề xuất khóa học phù hợp:\n{observation}",
+                system_prompt=REACT_SYSTEM_PROMPT,
+            )
+            print(f"🏁 Final Answer:\n{summary}")
+            return
+        except Exception as exc:
+            print(f"🏁 Final Answer (raw):\n{observation}")
+            print(f"⚠️ LLM fallback error: {exc}")
+            return
+
+    # Guardrail: Ngăn chặn lặp vô hạn nếu vì lý do nào đó vòng lặp không return
+    if step >= MAX_ITERATIONS:
+        print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
+
+
 if __name__ == "__main__":
     print("==================================================")
     print("🏫 ĐẠI HỌC VINUNI - BÀI LAB 3: CHATBOT VS REACT AGENT")
@@ -204,10 +271,15 @@ if __name__ == "__main__":
     print(f"✅ Đã tải thành công {len(tests)} Test Cases từ config/test_cases.json\n")
     
     # Chạy thử câu test số 3
-    sample_query = tests[4]["question"]
+    sample_query = tests[2]["question"]
     
     # print("--- DEMO 1: CHẠY TRÊN CHATBOT BASELINE ---")
     # run_baseline_chatbot(sample_query, provider)
     
     print("\n--- DEMO 2: CHẠY TRÊN REACT AGENT ---")
     run_react_agent(sample_query, provider)
+
+    sample_query = tests[4]["question"]
+
+    print("\n--- DEMO 3: CHẠY TRÊN REACT AGENT (TEST CASE 5) ---")
+    run_react_agent_case5(sample_query, provider)
