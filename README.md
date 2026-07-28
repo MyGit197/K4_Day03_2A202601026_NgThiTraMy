@@ -26,6 +26,7 @@ Bài Lab giúp bạn hiểu rõ sự tiến hóa qua 4 cấp độ của hệ th
 ├── 📄 .env.example              <-- 🔑 File mẫu API Key
 ├── 📄 requirements.txt          <-- 📦 Thư viện cần cài đặt
 │
+├── 📄 streamlit_app.py      <-- 🖥️ Demo UI bằng Streamlit
 ├── 📁 config/                   <-- 🛠️ CẤU HÌNH & DỮ LIỆU
 │   └── 📄 test_cases.json       <-- 🟢 [Role 1] Bộ đề 5 Test Cases thử thách AI
 │
@@ -39,6 +40,12 @@ Bài Lab giúp bạn hiểu rõ sự tiến hóa qua 4 cấp độ của hệ th
     ├── 📄 PHAN_CONG_CONG_VIEC.md <-- 📋 [BẮT ĐẦU TẠI ĐÂY] Sổ tay thực hành & Checklist 5 Roles
     ├── 📄 DANH_SACH_DE_TAI.md    <-- 💡 Danh sách 10 chủ đề gợi ý
     └── 📄 trace_eval.md          <-- 📊 [Role 5] Báo cáo Log Trace & Đánh giá Agentic Fit
+```
+
+Chạy demo UI Streamlit:
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
 ```
 
 ---
