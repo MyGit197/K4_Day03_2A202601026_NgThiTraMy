@@ -10,11 +10,11 @@
 
 *Describe your specific contribution to the codebase (e.g., implemented a specific tool, fixed the parser, etc.).*
 
-- **Modules Implementated**: [`docs/trace_eval.md` (Role 5 - Observability: Scoring Matrix & Trace Log) và phần hiển thị UI console trong `src/app.py` (định dạng log Thought/Action/Observation bằng emoji, xử lý encoding UTF-8 cho tiếng Việt).]
+- **Modules Implementated**: [`docs/trace_eval.md` (Role 5 - Observability: Scoring Matrix & Trace Log) và phần hiển thị UI.]
 - **Code Highlights**: 
   - Bảng chấm điểm Agentic Fit (Scoring Matrix 1-5 điểm cho 4 tiêu chí: Multi-step Reasoning, Tool Interaction, Dynamic Decision, Long Horizon) tại [trace_eval.md](docs/trace_eval.md#L7-L13), tổng điểm 18/20 → kết luận bài toán rất nên dùng ReAct Agent.
   - So sánh trực tiếp phản hồi Chatbot Baseline vs ReAct Agent trên Test Case #3 ("Tìm khóa Python cơ bản, học cuối tuần, học phí dưới 2 triệu") tại [trace_eval.md](docs/trace_eval.md#L20-L88), trích đầy đủ chuỗi `Thought -> Action -> Observation -> Final Answer`.
-  - Về phần UI: chuẩn hóa output console trong [app.py](src/app.py#L14-L18) bằng cách reconfigure `sys.stdout` sang `utf-8` và dùng emoji (🧠 Thought, 🛠️ Action, 👁️ Observation, 🏁 Final Answer) để log dễ đọc, dễ debug hơn khi trình chiếu demo.
+  - Về phần UI: Sử dụng streamlit, chuẩn hóa output console trong [app.py](src/app.py#L14-L18) bằng cách reconfigure `sys.stdout` sang `utf-8` và dùng emoji (🧠 Thought, 🛠️ Action, 👁️ Observation, 🏁 Final Answer) để log dễ đọc, dễ debug hơn khi trình chiếu demo.
 - **Documentation**: [Trace log trong `docs/trace_eval.md` đóng vai trò "tấm gương" phản chiếu vòng lặp ReAct mà Role 4 lắp ráp trong `src/app.py`. Mỗi bước `Thought -> Action -> Observation` được Role 4 in ra console (qua các dòng `print()` có định dạng emoji tôi đề xuất) sẽ được tôi trích xuất, dán lại vào trace_eval.md kèm nhận xét (Nhận xét) để cả nhóm nhìn thấy rõ agent suy luận đúng/sai ở bước nào, từ đó phục vụ việc chấm điểm và cải tiến Guardrails.]
 
 
