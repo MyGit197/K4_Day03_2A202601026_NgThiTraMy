@@ -1,0 +1,77 @@
+Chủ đề đã chọn: Đề số 7 - Trợ lý tư vấn khóa học sinh viên
+
+Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
+
+1. search_courses(keyword, major, level, career_goal, budget, schedule)
+   - Mục đích: Tìm khóa học phù hợp theo nhu cầu của sinh viên.
+   - Khi dùng: Người dùng hỏi có khóa nào về AI/Python/Data, khóa cho sinh viên năm nhất, khóa cuối tuần, khóa dưới một mức học phí.
+   - Input bắt buộc: Không bắt buộc toàn bộ; có thể truyền rỗng cho tiêu chí chưa biết.
+   - Input gợi ý: keyword, major, level, career_goal, budget, schedule.
+   - Output thành công: JSON chứa danh sách khóa học phù hợp gồm course_id, tên khóa, trình độ, học phí, lịch học, trạng thái chỗ.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu sai kiểu dữ liệu, ngân sách không đọc được, hoặc không tìm thấy khóa phù hợp.
+   - Side effect: Không thay đổi dữ liệu, chỉ đọc danh mục khóa học mẫu.
+
+2. get_course_detail(course_id)
+   - Mục đích: Lấy thông tin chi tiết của một khóa học.
+   - Khi dùng: Người dùng muốn biết nội dung, học phí, thời lượng, giảng viên, điều kiện đầu vào, chứng chỉ hoặc lịch học.
+   - Input bắt buộc: course_id, ví dụ "C101".
+   - Output thành công: JSON chi tiết khóa học.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu mã khóa học hoặc mã không tồn tại.
+   - Side effect: Không thay đổi dữ liệu.
+
+3. check_prerequisite(student_id, course_id)
+   - Mục đích: Kiểm tra sinh viên đã đủ điều kiện đầu vào của khóa học chưa.
+   - Khi dùng: Người dùng hỏi "em chưa học Python có đăng ký Machine Learning được không?" hoặc trước khi đăng ký khóa có prerequisite.
+   - Input bắt buộc: student_id và course_id.
+   - Output thành công: JSON có eligible, missing_prerequisites và message.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu sinh viên, thiếu khóa học hoặc không tìm thấy dữ liệu.
+   - Side effect: Không thay đổi dữ liệu.
+
+4. check_schedule_conflict(student_id, course_id)
+   - Mục đích: Kiểm tra khóa học có trùng lịch học hiện tại của sinh viên không.
+   - Khi dùng: Người dùng hỏi khóa này có trùng lịch không, hoặc trước bước đăng ký.
+   - Input bắt buộc: student_id và course_id.
+   - Output thành công: JSON có has_conflict, conflicts và message.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu dữ liệu hoặc sai mã.
+   - Side effect: Không thay đổi dữ liệu.
+
+5. get_student_profile(student_id)
+   - Mục đích: Lấy hồ sơ sinh viên để tư vấn cá nhân hóa.
+   - Khi dùng: Cần biết ngành, năm học, môn đã hoàn thành, điểm mạnh, mục tiêu nghề nghiệp, lịch học hiện tại.
+   - Input bắt buộc: student_id.
+   - Output thành công: JSON hồ sơ sinh viên.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu mã sinh viên hoặc không tìm thấy hồ sơ.
+   - Side effect: Không thay đổi dữ liệu.
+
+6. register_course(student_id, course_id)
+   - Mục đích: Mô phỏng đăng ký khóa học cho sinh viên.
+   - Khi dùng: Chỉ gọi sau khi sinh viên xác nhận rõ ràng muốn đăng ký.
+   - Không nên dùng khi: Sinh viên chỉ hỏi khóa có phù hợp không, hỏi học phí, hỏi lịch, hoặc còn đang phân vân.
+   - Input bắt buộc: student_id và course_id.
+   - Output thành công: JSON xác nhận đăng ký giả lập.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu điều kiện đầu vào, trùng lịch, hết chỗ hoặc sai dữ liệu.
+   - Side effect: Trong lab chỉ mô phỏng đăng ký, không ghi dữ liệu thật.
+
+7. create_learning_reminder(student_id, course_id, reminder_time)
+   - Mục đích: Mô phỏng tạo nhắc học cho sinh viên.
+   - Khi dùng: Người dùng yêu cầu nhắc trước buổi học, ví dụ "nhắc em trước 30 phút".
+   - Input bắt buộc: student_id, course_id, reminder_time.
+   - Output thành công: JSON xác nhận tạo nhắc học giả lập.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu tham số hoặc sai dữ liệu.
+   - Side effect: Trong lab chỉ mô phỏng tạo nhắc học, không ghi lịch thật.
+
+8. handoff_to_advisor(student_id, reason, conversation_summary)
+   - Mục đích: Chuyển cho tư vấn viên/cố vấn học tập.
+   - Khi dùng: Chatbot không tìm thấy thông tin, sinh viên có trường hợp đặc biệt, liên quan hoàn tiền/khiếu nại, cần cố vấn quyết định, hoặc tool báo lỗi nhiều lần.
+   - Input bắt buộc: student_id, reason, conversation_summary.
+   - Output thành công: JSON chứa ticket_id giả lập và bước tiếp theo.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu tham số hoặc sai kiểu dữ liệu.
+   - Side effect: Trong lab chỉ mô phỏng tạo phiếu, không gửi ticket thật.
+
+9. compare_courses(course_ids)
+   - Mục đích: So sánh nhiều khóa học cạnh nhau.
+   - Khi dùng: Người dùng phân vân giữa nhiều khóa hoặc hỏi khóa nào rẻ hơn, phù hợp hơn, nhẹ hơn.
+   - Input bắt buộc: Ít nhất 2 mã khóa học, ví dụ "C101,C201".
+   - Output thành công: JSON bảng so sánh học phí, thời lượng, lịch học, điều kiện đầu vào, chứng chỉ và mục tiêu nghề nghiệp.
+   - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu mã, ít hơn 2 mã hoặc có mã không tồn tại.
+   - Side effect: Không thay đổi dữ liệu.
