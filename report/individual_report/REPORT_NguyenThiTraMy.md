@@ -26,7 +26,6 @@ Trong vai trò Role 4, tôi chịu trách nhiệm chính về tích hợp lõi A
     - gọi `get_student_profile`
     - xử lý an toàn khi hồ sơ không tồn tại, tránh bịa thông tin hoặc tiếp tục sai
   - Thêm cơ chế guardrail `MAX_ITERATIONS` để chặn vòng lặp vô hạn và dừng an toàn khi không giải quyết được trong số bước tối đa.
-  - Xây dựng `streamlit_app.py` để tạo UI demo: lựa chọn nhà cung cấp LLM, chọn câu mẫu, và chạy cả hai luồng Baseline và ReAct.
 
 - **Tài liệu**:
   - Cập nhật report cá nhân và nhóm

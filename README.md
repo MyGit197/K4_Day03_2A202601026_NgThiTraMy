@@ -26,7 +26,6 @@ Bài Lab giúp bạn hiểu rõ sự tiến hóa qua 4 cấp độ của hệ th
 ├── 📄 .env.example              <-- 🔑 File mẫu API Key
 ├── 📄 requirements.txt          <-- 📦 Thư viện cần cài đặt
 │
-├── 📄 streamlit_app.py      <-- 🖥️ Demo UI bằng Streamlit
 ├── 📁 config/                   <-- 🛠️ CẤU HÌNH & DỮ LIỆU
 │   └── 📄 test_cases.json       <-- 🟢 [Role 1] Bộ đề 5 Test Cases thử thách AI
 │
