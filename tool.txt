@@ -10,6 +10,20 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON chứa danh sách khóa học phù hợp gồm course_id, tên khóa, trình độ, học phí, lịch học, trạng thái chỗ.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu sai kiểu dữ liệu, ngân sách không đọc được, hoặc không tìm thấy khóa phù hợp.
    - Side effect: Không thay đổi dữ liệu, chỉ đọc danh mục khóa học mẫu.
+   - Edge case/lỗi production:
+     (1) Tất cả tiêu chí đều rỗng/null/chỉ chứa khoảng trắng: truy vấn có thể trả toàn bộ danh mục và làm response quá lớn; cần đặt giới hạn, phân trang và tiêu chí sắp xếp mặc định.
+     (2) Sai kiểu dữ liệu (budget là object/list, các trường là số/boolean), chuỗi quá dài hoặc ký tự điều khiển: cần validate schema, giới hạn độ dài và trả lỗi validation rõ trường.
+     (3) Keyword có dấu/không dấu, khác hoa-thường, Unicode tổ hợp, nhiều khoảng trắng hoặc lỗi chính tả: cần chuẩn hóa trước khi tìm để tránh bỏ sót kết quả.
+     (4) Budget mơ hồ ("5 triệu", "5tr", "5000000 VND", khoảng giá), bằng 0, âm, NaN, vô cực, sai tiền tệ hoặc vượt miền số: cần parse an toàn, xác định đơn vị/tiền tệ và từ chối giá trị không hợp lệ.
+     (5) Schedule mơ hồ ("cuối tuần", "buổi tối"), sai định dạng, khác múi giờ hoặc khóa có nhiều ca học: cần chuẩn hóa sang cấu trúc lịch và múi giờ xác định.
+     (6) Các tiêu chí hợp lệ nhưng mâu thuẫn nên không có khóa phù hợp: nên trả JSON thành công với danh sách rỗng và gợi ý nới tiêu chí, không coi đây là lỗi hệ thống.
+     (7) Kết quả quá nhiều, trùng khóa hoặc thứ hạng không ổn định giữa các lần gọi: cần khử trùng, pagination/cursor và tie-breaker xác định.
+     (8) Dữ liệu khóa thiếu học phí/lịch/trạng thái chỗ hoặc có bản ghi hỏng: không được làm hỏng toàn bộ response; cần bỏ/đánh dấu trường thiếu và ghi nhận lỗi dữ liệu.
+     (9) Danh mục hoặc trạng thái chỗ bị stale do cache; khóa vừa đóng/mở sau khi tìm: phải trả thời điểm cập nhật và luôn kiểm tra lại khi đăng ký.
+     (10) Backend tìm kiếm chậm, timeout, rate limit hoặc chỉ trả một phần: cần timeout, retry có backoff, circuit breaker và phân biệt lỗi tạm thời với "không có kết quả".
+     (11) Keyword chứa payload SQL/regex/search-query injection hoặc biểu thức regex gây tốn CPU: phải dùng truy vấn tham số hóa, escape đúng lớp và giới hạn độ phức tạp.
+     (12) Lộ khóa chưa công bố/khóa nội bộ do thiếu filter quyền truy cập: phải lọc theo tenant, cơ sở, vai trò và trạng thái xuất bản của người gọi.
+     (13) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" làm caller dễ parse sai: production nên dùng một JSON envelope thống nhất, error_code ổn định, retryable và correlation_id; không lộ stack trace.
 
 2. get_course_detail(course_id)
    - Mục đích: Lấy thông tin chi tiết của một khóa học.
@@ -18,6 +32,18 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON chi tiết khóa học.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu mã khóa học hoặc mã không tồn tại.
    - Side effect: Không thay đổi dữ liệu.
+   - Edge case/lỗi production:
+     (1) course_id null/rỗng/chỉ có khoảng trắng, sai kiểu, quá dài hoặc chứa ký tự lạ: cần validate và canonicalize nhưng không tự sửa thành một mã khác.
+     (2) Mã khác hoa-thường, có khoảng trắng đầu/cuối, mã cũ/alias sau khi đổi mã: cần quy tắc chuẩn hóa và redirect/đánh dấu mã đã ngừng dùng.
+     (3) Khóa tồn tại nhưng đã xóa mềm, hủy, lưu trữ, chưa công bố hoặc người gọi không thuộc tenant/cơ sở được phép xem: phải kiểm tra quyền và không làm lộ sự tồn tại của dữ liệu bị hạn chế.
+     (4) Bản ghi có trường null/thiếu, sai kiểu, học phí âm, lịch không hợp lệ hoặc prerequisite trỏ tới khóa không tồn tại: cần validation dữ liệu đầu ra và trạng thái "chưa cập nhật" thay vì crash.
+     (5) Một khóa có nhiều lớp, nhiều mức học phí, nhiều giảng viên hoặc nhiều múi giờ: không được tùy tiện chọn phần tử đầu tiên; output phải biểu diễn đầy đủ hoặc yêu cầu chọn lớp.
+     (6) Cache trả chi tiết cũ trong khi học phí, lịch, giảng viên hoặc chỗ trống vừa thay đổi: cần version/timestamp, TTL phù hợp và revalidate dữ liệu biến động.
+     (7) Nội dung mô tả chứa HTML/script/URL độc hại từ CMS: cần sanitize/escape theo kênh hiển thị để ngăn XSS và prompt injection gián tiếp.
+     (8) Backend danh mục timeout, rate limit, lỗi một phần hoặc schema thay đổi: cần timeout, retry an toàn, adapter version và lỗi phụ thuộc riêng; không trả nhầm "mã không tồn tại".
+     (9) Enumeration bằng cách thử hàng loạt course_id: cần authorization, rate limit và thông báo lỗi không tiết lộ quá mức.
+     (10) Định dạng tiền tệ, thời lượng, ngày giờ và ngôn ngữ không nhất quán: giữ giá trị chuẩn trong JSON và chỉ format theo locale ở lớp hiển thị.
+     (11) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" làm caller dễ parse sai: production nên dùng JSON envelope và error_code thống nhất, kèm correlation_id nhưng không lộ lỗi nội bộ.
 
 3. check_prerequisite(student_id, course_id)
    - Mục đích: Kiểm tra sinh viên đã đủ điều kiện đầu vào của khóa học chưa.
@@ -26,6 +52,19 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON có eligible, missing_prerequisites và message.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu sinh viên, thiếu khóa học hoặc không tìm thấy dữ liệu.
    - Side effect: Không thay đổi dữ liệu.
+   - Edge case/lỗi production:
+     (1) student_id/course_id thiếu, sai kiểu, thừa khoảng trắng, khác hoa-thường hoặc quá dài: cần validate/canonicalize nhất quán.
+     (2) Người gọi kiểm tra hồ sơ của sinh viên khác (IDOR) hoặc khác tenant/cơ sở: phải xác thực và kiểm tra quyền trên student_id.
+     (3) Sinh viên/khóa bị xóa mềm, đình chỉ, chưa công bố hoặc không thuộc cùng chương trình: cần phân biệt rõ "không tồn tại", "không có quyền" và "không áp dụng".
+     (4) Bảng điểm cập nhật chậm; môn vừa hoàn thành, đang chờ điểm, đang học, rút môn, học lại hoặc điểm chưa chốt: cần trạng thái ba mức đủ/không đủ/chưa xác định, không ép thành false.
+     (5) Điều kiện có điểm tối thiểu, thời hạn hiệu lực, chứng chỉ bên ngoài, môn tương đương, miễn trừ hoặc phê duyệt thủ công: engine phải đánh giá đủ rule và trả bằng chứng/quy tắc còn thiếu.
+     (6) Điều kiện dạng AND/OR, đồng điều kiện (corequisite), nhiều cấp hoặc prerequisite tạo chu trình: cần biểu diễn cây điều kiện và phát hiện cycle để tránh lặp vô hạn.
+     (7) Quy định prerequisite thay đổi theo kỳ/phiên bản khóa: phải đánh giá theo đúng offering và thời điểm đăng ký, không chỉ theo course_id chung.
+     (8) Dữ liệu môn hoàn thành bị trùng, mã môn cũ/mới hoặc khác hệ thống: cần mapping chuẩn, khử trùng và kiểm soát version.
+     (9) Một nguồn dữ liệu phụ thuộc bị timeout/lỗi một phần: không được kết luận eligible=true/false khi thiếu bằng chứng; trả "chưa thể xác minh" và retry phù hợp.
+     (10) Kết quả vừa kiểm tra trở nên stale trước lúc đăng ký: register_course phải kiểm tra prerequisite lại trong transaction/quy trình nhất quán.
+     (11) message nói "đủ điều kiện" nhưng eligible hoặc missing_prerequisites mâu thuẫn do dựng response lỗi: cần tạo message từ dữ liệu có cấu trúc và kiểm tra invariant.
+     (12) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" gây schema không ổn định: production nên trả JSON envelope, error_code/retryable/correlation_id thống nhất.
 
 4. check_schedule_conflict(student_id, course_id)
    - Mục đích: Kiểm tra khóa học có trùng lịch học hiện tại của sinh viên không.
@@ -34,6 +73,19 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON có has_conflict, conflicts và message.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu dữ liệu hoặc sai mã.
    - Side effect: Không thay đổi dữ liệu.
+   - Edge case/lỗi production:
+     (1) student_id/course_id thiếu, sai kiểu, mã không tồn tại hoặc không có quyền truy cập: cần validate và chặn IDOR tương tự các tool hồ sơ.
+     (2) Khóa có nhiều lớp/section nhưng chỉ truyền course_id: chưa đủ dữ liệu để kết luận; cần kiểm tra tất cả lựa chọn hoặc yêu cầu section_id.
+     (3) Lịch lặp theo tuần chẵn/lẻ, theo khoảng ngày, có buổi ngoại lệ, buổi bù, học online và nhiều địa điểm: phải mở rộng recurrence đúng phạm vi kỳ học.
+     (4) Hai buổi chạm biên (một buổi kết thúc đúng lúc buổi kia bắt đầu): cần quy ước interval rõ ràng và có thể thêm thời gian di chuyển/buffer.
+     (5) Lịch qua nửa đêm, ngày tháng không hợp lệ, múi giờ khác nhau hoặc DST: lưu thời gian chuẩn kèm timezone và so sánh theo instant thực.
+     (6) Khóa gồm lecture/lab/tutorial nhưng dữ liệu chỉ kiểm tra lecture: phải xét mọi thành phần bắt buộc và các nhóm lựa chọn tương ứng.
+     (7) Lịch hiện tại có môn chờ duyệt, waitlist, đã hủy hoặc sự kiện cá nhân: cần quy định loại nào là hard conflict, warning hay bỏ qua.
+     (8) Dữ liệu lịch thiếu/null hoặc dịch vụ lịch chỉ trả một phần: phải trả "chưa xác định", không mặc định has_conflict=false.
+     (9) Lịch thay đổi hoặc sinh viên đăng ký môn khác giữa lúc kiểm tra và đăng ký: register_course phải kiểm tra lại để tránh race condition.
+     (10) conflicts quá nhiều, trùng lặp hoặc chứa thông tin nhạy cảm của lịch cá nhân: cần khử trùng, giới hạn output và chỉ trả dữ liệu tối thiểu cần thiết.
+     (11) message mâu thuẫn với has_conflict/conflicts: cần invariant, ví dụ has_conflict=true khi và chỉ khi có hard conflict.
+     (12) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" gây schema không ổn định: production nên trả JSON envelope, error_code/retryable/correlation_id thống nhất.
 
 5. get_student_profile(student_id)
    - Mục đích: Lấy hồ sơ sinh viên để tư vấn cá nhân hóa.
@@ -42,6 +94,19 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON hồ sơ sinh viên.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu mã sinh viên hoặc không tìm thấy hồ sơ.
    - Side effect: Không thay đổi dữ liệu.
+   - Edge case/lỗi production:
+     (1) student_id thiếu/rỗng/sai kiểu/khác định dạng hoặc mã cũ sau khi chuyển cơ sở: cần validate và cơ chế ánh xạ định danh tin cậy.
+     (2) Người gọi dùng student_id của người khác (IDOR), token hết hạn hoặc truy cập chéo tenant: bắt buộc authentication, authorization và audit truy cập.
+     (3) Hồ sơ chứa PII/điểm số/lịch cá nhân nhưng tool trả quá nhiều trường cho mục đích tư vấn: áp dụng data minimization, field-level permission và che dữ liệu nhạy cảm.
+     (4) Sinh viên chưa có hồ sơ, hồ sơ bị xóa mềm/khóa, có nhiều hồ sơ trùng hoặc merge chưa hoàn tất: cần trạng thái rõ ràng và không chọn ngẫu nhiên một bản ghi.
+     (5) Ngành, năm học, môn hoàn thành, mục tiêu hoặc lịch bị null/sai kiểu/mâu thuẫn: trả trường "chưa có dữ liệu" và ghi nhận lỗi chất lượng dữ liệu thay vì suy đoán.
+     (6) Dữ liệu đến từ nhiều hệ thống với độ trễ khác nhau, ví dụ bảng điểm mới nhưng năm học cũ: cần timestamp/source cho dữ liệu quan trọng và quy tắc hòa giải.
+     (7) Danh sách môn/lịch quá lớn làm response vượt giới hạn: cần giới hạn trường, pagination hoặc summary có thể truy vết.
+     (8) Hồ sơ thay đổi đồng thời trong lúc đọc: dùng snapshot/version để tránh response gồm các phần không cùng thời điểm.
+     (9) Backend sinh viên timeout, rate limit, lỗi một phần hoặc trả schema mới: phân biệt lỗi phụ thuộc với "không tìm thấy", có retry/circuit breaker và schema validation.
+     (10) Log, trace hoặc thông báo lỗi ghi nguyên hồ sơ: cần redaction PII và chính sách lưu giữ/audit phù hợp.
+     (11) Nội dung tự do như career_goal chứa prompt injection hoặc HTML độc hại: coi là dữ liệu không tin cậy, escape khi hiển thị và không để ghi đè chỉ dẫn hệ thống.
+     (12) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" gây schema không ổn định: production nên trả JSON envelope, error_code/retryable/correlation_id thống nhất.
 
 6. register_course(student_id, course_id)
    - Mục đích: Mô phỏng đăng ký khóa học cho sinh viên.
@@ -51,6 +116,22 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON xác nhận đăng ký giả lập.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu điều kiện đầu vào, trùng lịch, hết chỗ hoặc sai dữ liệu.
    - Side effect: Trong lab chỉ mô phỏng đăng ký, không ghi dữ liệu thật.
+   - Edge case/lỗi production:
+     (1) Không có xác nhận rõ ràng, xác nhận đã cũ hoặc xác nhận cho khóa/section khác: cần confirmation token ngắn hạn gắn với student_id, offering_id và nội dung giao dịch.
+     (2) Người gọi đăng ký thay sinh viên khác hoặc chéo tenant: bắt buộc authentication, authorization mạnh và audit ai thực hiện.
+     (3) course_id không xác định được kỳ/lớp/section/lịch cụ thể: production nên yêu cầu offering_id/section_id, không tự chọn lớp.
+     (4) Request bị gửi lặp do double-click, retry hoặc timeout không rõ kết quả: cần idempotency key; cùng một yêu cầu chỉ tạo tối đa một đăng ký.
+     (5) Sinh viên đã đăng ký, đang waitlist, đã hoàn thành khóa hoặc có bản ghi đăng ký dở dang: trả trạng thái hiện có thay vì tạo bản ghi trùng.
+     (6) Chỗ cuối cùng bị nhiều sinh viên giành đồng thời: kiểm tra và giữ chỗ nguyên tử bằng transaction/lock/constraint, không dựa vào kết quả search cũ.
+     (7) Prerequisite, lịch, trạng thái sinh viên hoặc học phí thay đổi sau bước kiểm tra: phải kiểm tra lại tất cả điều kiện ngay trong luồng commit.
+     (8) Ngoài thời gian đăng ký, khóa đã đóng/hủy, vượt số tín chỉ, còn nợ phí/hold, hạn chế ngành/cơ sở hoặc cần consent: phải áp dụng đầy đủ policy và mã lý do máy đọc được.
+     (9) Hết chỗ nhưng có waitlist, hoặc còn chỗ tổng thể nhưng quota nhóm đã hết: cần quy tắc quota/waitlist rõ ràng và không báo sai "đăng ký thành công".
+     (10) Ghi DB thành công nhưng response/notification thất bại, hoặc một bước ghi thất bại sau khi đã giữ chỗ: dùng transaction/outbox, trạng thái có thể truy vấn và cơ chế reconciliation.
+     (11) Deadlock, timeout, mất kết nối hoặc service restart giữa giao dịch: retry chỉ khi an toàn và luôn dựa trên idempotency key/unique constraint.
+     (12) Chế độ lab bị cấu hình nhầm sang production hoặc ngược lại: tách endpoint/credential/environment rõ ràng, có kill switch và banner xác nhận môi trường.
+     (13) Output báo thành công nhưng không có registration_id/trạng thái kiểm chứng được: production cần mã giao dịch, timestamp, offering đã chọn và trạng thái cuối.
+     (14) Log chứa PII/token hoặc thiếu audit trail cho thao tác ghi: cần redaction, correlation_id và audit bất biến.
+     (15) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" khiến client khó phân biệt lỗi có thể retry: production nên dùng JSON envelope, HTTP/RPC status và error_code thống nhất.
 
 7. create_learning_reminder(student_id, course_id, reminder_time)
    - Mục đích: Mô phỏng tạo nhắc học cho sinh viên.
@@ -59,6 +140,20 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON xác nhận tạo nhắc học giả lập.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu tham số hoặc sai dữ liệu.
    - Side effect: Trong lab chỉ mô phỏng tạo nhắc học, không ghi lịch thật.
+   - Edge case/lỗi production:
+     (1) reminder_time mơ hồ ("mai", "trước giờ học", "30 phút"), sai định dạng, không có timezone/locale hoặc có thể hiểu là thời điểm tuyệt đối hay độ lệch: cần schema tách absolute_time và offset, kèm timezone.
+     (2) Thời gian ở quá khứ, đúng lúc buổi học bắt đầu, quá xa tương lai hoặc offset lớn hơn thời gian còn lại: cần validate và báo rõ thời điểm thực tế sẽ nhắc.
+     (3) DST làm thời gian không tồn tại/lặp hai lần, hoặc sinh viên/khóa ở múi giờ khác: lưu UTC cùng timezone gốc và quy tắc DST rõ ràng.
+     (4) Khóa có nhiều section/buổi học/lịch lặp nhưng chỉ có course_id: phải xác định occurrence/section và cho biết tạo một lần hay lặp lại.
+     (5) Lịch học đổi, buổi học bị hủy/bù hoặc sinh viên bỏ khóa sau khi tạo nhắc: cần đồng bộ/cập nhật/hủy reminder theo event nguồn.
+     (6) Request bị gọi lặp do retry/double-click: dùng idempotency key hoặc unique key hợp lý để tránh nhiều thông báo giống nhau.
+     (7) Người gọi tạo nhắc cho sinh viên khác: cần authorization và xác minh sinh viên có quyền truy cập/đăng ký khóa.
+     (8) Kênh thông báo chưa được chọn, người dùng chưa consent, token thiết bị/email lỗi hoặc quiet hours: cần preference/consent, fallback và trạng thái delivery.
+     (9) Scheduler/queue outage, worker chạy trễ, chạy hai lần hoặc mất job: cần durable queue, at-least-once kèm deduplication, retry và dead-letter queue.
+     (10) Tạo reminder thành công nhưng lên lịch/notification thất bại một phần: phân biệt created, scheduled, delivered, failed; có reconciliation.
+     (11) Spam do tạo quá nhiều reminder hoặc reminder_time quá dày: cần quota/rate limit và hỗ trợ liệt kê/hủy/sửa.
+     (12) Chế độ lab/production bị nhầm cấu hình: tách rõ môi trường để tránh gửi thông báo thật ngoài ý muốn.
+     (13) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" khiến client khó xử lý/retry: production nên dùng JSON envelope, error_code/retryable/correlation_id thống nhất.
 
 8. handoff_to_advisor(student_id, reason, conversation_summary)
    - Mục đích: Chuyển cho tư vấn viên/cố vấn học tập.
@@ -67,6 +162,21 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON chứa ticket_id giả lập và bước tiếp theo.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu tham số hoặc sai kiểu dữ liệu.
    - Side effect: Trong lab chỉ mô phỏng tạo phiếu, không gửi ticket thật.
+   - Edge case/lỗi production:
+     (1) student_id/reason/summary rỗng, chỉ có khoảng trắng, sai kiểu, quá ngắn hoặc vượt giới hạn hệ thống ticket: validate schema/độ dài và không cắt mất ý quan trọng một cách im lặng.
+     (2) Người gọi chuyển ticket cho sinh viên khác hoặc chéo tenant: cần authentication, authorization và audit.
+     (3) conversation_summary chứa PII, thông tin tài chính/y tế, credential hoặc nội dung không cần thiết: cần consent, data minimization, redaction và chính sách retention.
+     (4) Summary sai lệch, bỏ mất yêu cầu chính, lẫn nội dung của cuộc hội thoại khác hoặc không ghi rõ việc đã thử: nên kèm structured fields, nguồn và cho người dùng xem/xác nhận khi phù hợp.
+     (5) Nội dung người dùng chứa prompt injection, HTML/script, link/file độc hại: coi summary là dữ liệu không tin cậy, sanitize và quét attachment trước khi đưa vào hệ thống cố vấn.
+     (6) Cùng sự cố tạo nhiều ticket do retry hoặc tool lỗi nhiều lần: cần idempotency/deduplication và trả ticket đang mở nếu phù hợp.
+     (7) Ticket system timeout sau khi đã tạo ticket khiến client tưởng thất bại: dùng idempotency key/correlation_id và API tra cứu trạng thái.
+     (8) Routing sai cố vấn do reason mơ hồ, ngoài giờ, cố vấn nghỉ hoặc queue đầy: cần taxonomy, fallback queue, lịch trực và SLA/ETA rõ ràng.
+     (9) Trường hợp khẩn cấp/an toàn bị đưa vào hàng chờ thông thường: cần phân loại mức độ ưu tiên và quy trình escalation riêng theo chính sách tổ chức.
+     (10) Tạo ticket thành công nhưng thông báo cho sinh viên/cố vấn thất bại: theo dõi riêng trạng thái ticket và notification, retry qua outbox.
+     (11) ticket_id trùng, dễ đoán hoặc bị lộ cho người không có quyền: dùng định danh khó đoán, tenant scoping và authorization khi tra cứu.
+     (12) Advisor không thể truy cập dữ liệu được tham chiếu hoặc summary quá dài/bị truncate: kiểm tra quyền, giới hạn có chủ đích và đính kèm reference an toàn.
+     (13) Chế độ mô phỏng bị nhầm với production: output phải ghi rõ simulated=true; môi trường thật cần connector, audit và kiểm chứng ticket tồn tại.
+     (14) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" khiến client khó xác định ticket đã tạo hay chưa: production nên dùng JSON envelope, error_code/retryable/correlation_id thống nhất.
 
 9. compare_courses(course_ids)
    - Mục đích: So sánh nhiều khóa học cạnh nhau.
@@ -75,3 +185,18 @@ Danh sách công cụ Role 2 sẽ tạo trong src/tools.py:
    - Output thành công: JSON bảng so sánh học phí, thời lượng, lịch học, điều kiện đầu vào, chứng chỉ và mục tiêu nghề nghiệp.
    - Output lỗi: Chuỗi bắt đầu bằng "LỖI:" nếu thiếu mã, ít hơn 2 mã hoặc có mã không tồn tại.
    - Side effect: Không thay đổi dữ liệu.
+   - Edge case/lỗi production:
+     (1) course_ids có thể là CSV, list JSON, chuỗi có khoảng trắng/dấu phẩy thừa, sai kiểu hoặc null: cần định nghĩa một schema chuẩn và parse nghiêm ngặt.
+     (2) Danh sách có mã trùng; sau khi chuẩn hóa chỉ còn dưới 2 khóa khác nhau: phải khử trùng rồi mới kiểm tra số lượng tối thiểu.
+     (3) Danh sách quá dài làm response lớn hoặc tạo truy vấn N+1/DoS: đặt số khóa tối đa, batch query và giới hạn kích thước output.
+     (4) Một vài mã không tồn tại/không có quyền xem trong khi các mã khác hợp lệ: cần policy rõ all-or-nothing hay partial result, kèm errors theo từng mã và không làm lộ khóa hạn chế.
+     (5) Mã khác hoa-thường, mã cũ/alias hoặc cùng course_id nhưng nhiều offering/section: canonicalize và yêu cầu offering cụ thể khi lịch/học phí khác nhau.
+     (6) Học phí dùng tiền tệ/kỳ thu khác nhau; thời lượng dùng giờ/tuần/tín chỉ khác nhau: giữ cả giá trị gốc và giá trị chuẩn hóa, ghi rõ tỷ giá/thời điểm nếu quy đổi.
+     (7) Trường so sánh bị thiếu/null hoặc schema khác nhau giữa các loại khóa: hiển thị "không có dữ liệu", không biến null thành 0/false.
+     (8) Dữ liệu các khóa được đọc ở các thời điểm/version khác nhau hoặc cache một phần bị stale: dùng snapshot/version/timestamp nhất quán.
+     (9) Thứ tự kết quả khác thứ tự input hoặc thay đổi không ổn định: bảo toàn thứ tự người dùng hoặc công bố tiêu chí sắp xếp.
+     (10) "Phù hợp hơn", "nhẹ hơn" là tiêu chí chủ quan nhưng không có hồ sơ/trọng số: không tự khẳng định khóa tốt nhất; trả dữ kiện hoặc yêu cầu tiêu chí, giải thích cách chấm điểm.
+     (11) Một backend timeout/lỗi một phần: trả trạng thái incomplete và lỗi theo khóa; không trình bày bảng thiếu như so sánh đầy đủ.
+     (12) Nội dung mô tả/chứng chỉ chứa HTML hoặc prompt injection: sanitize/escape và không dùng nội dung tự do làm chỉ dẫn hệ thống.
+     (13) So sánh khóa đã hủy/chưa công bố/khác tenant: lọc quyền và hiển thị trạng thái availability rõ ràng trước khi đưa khuyến nghị.
+     (14) Thành công trả JSON nhưng lỗi trả chuỗi "LỖI:" gây schema không ổn định: production nên trả JSON envelope, error_code/retryable/correlation_id thống nhất.
