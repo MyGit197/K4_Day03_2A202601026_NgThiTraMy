@@ -27,6 +27,14 @@ import re
 from typing import Any
 
 
+ERROR_PREFIX = "LỖI:"
+
+
+def _error(message: str) -> str:
+    """Tạo chuỗi lỗi thống nhất theo tool.txt: luôn bắt đầu bằng 'LỖI:'."""
+    return f"{ERROR_PREFIX} {message}"
+
+
 COURSES: dict[str, dict[str, Any]] = {
     "C101": {
         "title": "Python Cơ Bản Cho Sinh Viên",
@@ -139,6 +147,206 @@ COURSES: dict[str, dict[str, Any]] = {
 }
 
 
+COURSES.update({
+    "C104": {
+        "title": "Kỹ Năng Học Đại Học và Quản Lý Thời Gian",
+        "description": "Xây dựng phương pháp tự học, quản lý deadline, ghi chú hiệu quả và làm việc nhóm.",
+        "majors": ["all"],
+        "level": "beginner",
+        "year_fit": ["năm nhất"],
+        "career_goals": ["all", "academic success", "research assistant"],
+        "fee": 900000,
+        "duration": "3 tuần",
+        "instructor": "Coach Vũ Hà My",
+        "prerequisites": [],
+        "certificate": "Chứng nhận Study Skills Foundation",
+        "schedule": "Tối thứ Hai, 18:00-20:00",
+        "schedule_type": "weekday_evening",
+        "slots": [("Mon", "18:00", "20:00")],
+        "capacity_status": "Còn 25 chỗ",
+        "tags": ["study skills", "time management", "năm nhất", "kỹ năng mềm"],
+        "mode": "offline",
+        "language": "Tiếng Việt",
+        "workload": "2-3 giờ/tuần",
+        "project": "Lập kế hoạch học tập cá nhân 4 tuần",
+        "outcomes": ["Quản lý deadline", "Ưu tiên công việc", "Tự đánh giá tiến độ"],
+        "next_start": "2026-08-12",
+        "rating": 4.6,
+        "scholarship_available": True,
+    },
+    "C203": {
+        "title": "Thiết Kế UI/UX Cho Sản Phẩm Số",
+        "description": "Nghiên cứu người dùng, wireframe, prototype Figma và kiểm thử usability.",
+        "majors": ["thiết kế tương tác", "công nghệ thông tin", "quản trị kinh doanh", "all"],
+        "level": "intermediate",
+        "year_fit": ["năm hai", "năm ba", "năm tư"],
+        "career_goals": ["ux designer", "product designer", "product manager"],
+        "fee": 2100000,
+        "duration": "7 tuần",
+        "instructor": "Ms. Phạm Ngọc Diệp",
+        "prerequisites": [],
+        "certificate": "Chứng chỉ UI/UX Product Design",
+        "schedule": "Chiều thứ Bảy, 13:30-16:30",
+        "schedule_type": "weekend_afternoon",
+        "slots": [("Sat", "13:30", "16:30")],
+        "capacity_status": "Còn 6 chỗ",
+        "tags": ["ui", "ux", "figma", "product", "cuối tuần"],
+        "mode": "hybrid",
+        "language": "Tiếng Việt",
+        "workload": "4-5 giờ/tuần",
+        "project": "Prototype app đặt lịch cố vấn học tập",
+        "outcomes": ["User research", "Wireframe", "Usability testing"],
+        "next_start": "2026-08-24",
+        "rating": 4.8,
+        "scholarship_available": False,
+    },
+    "C204": {
+        "title": "Cybersecurity Nhập Môn",
+        "description": "Tư duy bảo mật, password hygiene, web security cơ bản và phòng chống phishing.",
+        "majors": ["công nghệ thông tin", "khoa học dữ liệu", "all"],
+        "level": "beginner",
+        "year_fit": ["năm nhất", "năm hai", "năm ba"],
+        "career_goals": ["security analyst", "software engineer", "it support"],
+        "fee": 1700000,
+        "duration": "6 tuần",
+        "instructor": "Mr. Hoàng Việt Dũng",
+        "prerequisites": ["Tin học đại cương"],
+        "certificate": "Chứng chỉ Cybersecurity Awareness",
+        "schedule": "Tối thứ Tư, 18:30-21:00",
+        "schedule_type": "weekday_evening",
+        "slots": [("Wed", "18:30", "21:00")],
+        "capacity_status": "Còn 9 chỗ",
+        "tags": ["security", "cybersecurity", "web", "phishing"],
+        "mode": "online",
+        "language": "Tiếng Việt",
+        "workload": "3-4 giờ/tuần",
+        "project": "Báo cáo audit bảo mật cá nhân",
+        "outcomes": ["Nhận diện rủi ro", "Web security cơ bản", "An toàn tài khoản"],
+        "next_start": "2026-09-02",
+        "rating": 4.5,
+        "scholarship_available": True,
+    },
+    "C302": {
+        "title": "Data Storytelling và Thuyết Trình Dashboard",
+        "description": "Biến insight dữ liệu thành câu chuyện, thiết kế slide và thuyết trình dashboard.",
+        "majors": ["kinh tế", "quản trị kinh doanh", "khoa học dữ liệu", "all"],
+        "level": "advanced",
+        "year_fit": ["năm ba", "năm tư"],
+        "career_goals": ["data analyst", "business analyst", "consultant"],
+        "fee": 1600000,
+        "duration": "4 tuần",
+        "instructor": "Ms. Hà Thu Trang",
+        "prerequisites": ["Excel cơ bản"],
+        "certificate": "Chứng chỉ Data Storytelling",
+        "schedule": "Tối thứ Năm, 18:30-20:30",
+        "schedule_type": "weekday_evening",
+        "slots": [("Thu", "18:30", "20:30")],
+        "capacity_status": "Còn 14 chỗ",
+        "tags": ["data", "storytelling", "presentation", "dashboard"],
+        "mode": "offline",
+        "language": "Tiếng Việt",
+        "workload": "3 giờ/tuần",
+        "project": "Thuyết trình dashboard phân tích hành vi sinh viên",
+        "outcomes": ["Kể chuyện bằng dữ liệu", "Thiết kế slide", "Trình bày insight"],
+        "next_start": "2026-08-29",
+        "rating": 4.7,
+        "scholarship_available": False,
+    },
+    "C303": {
+        "title": "Nghiên Cứu Khoa Học Cho Sinh Viên",
+        "description": "Đọc paper, đặt câu hỏi nghiên cứu, viết proposal và chuẩn bị poster học thuật.",
+        "majors": ["all"],
+        "level": "advanced",
+        "year_fit": ["năm hai", "năm ba", "năm tư"],
+        "career_goals": ["research assistant", "graduate study", "data scientist"],
+        "fee": 2000000,
+        "duration": "8 tuần",
+        "instructor": "Dr. Mai Anh Khoa",
+        "prerequisites": ["Academic English For STEM"],
+        "certificate": "Chứng chỉ Undergraduate Research Skills",
+        "schedule": "Sáng thứ Bảy, 09:00-11:30",
+        "schedule_type": "weekend_morning",
+        "slots": [("Sat", "09:00", "11:30")],
+        "capacity_status": "Còn 4 chỗ",
+        "tags": ["research", "paper", "proposal", "academic", "cuối tuần"],
+        "mode": "hybrid",
+        "language": "Song ngữ Việt-Anh",
+        "workload": "5-6 giờ/tuần",
+        "project": "Research proposal 2 trang và poster học thuật",
+        "outcomes": ["Đọc paper", "Viết proposal", "Poster presentation"],
+        "next_start": "2026-09-07",
+        "rating": 4.9,
+        "scholarship_available": True,
+    },
+})
+
+COURSES["C101"].update({
+    "mode": "offline",
+    "language": "Tiếng Việt",
+    "workload": "3-4 giờ/tuần",
+    "project": "Ứng dụng quản lý todo bằng Python",
+    "outcomes": ["Biến và kiểu dữ liệu", "Hàm", "Vòng lặp", "File I/O"],
+    "next_start": "2026-08-15",
+    "rating": 4.7,
+    "scholarship_available": True,
+})
+
+COURSES["C102"].update({
+    "mode": "hybrid",
+    "language": "Tiếng Việt",
+    "workload": "4 giờ/tuần",
+    "project": "Dashboard phân tích doanh thu cửa hàng",
+    "outcomes": ["SQL SELECT/JOIN", "Data cleaning", "Power BI dashboard"],
+    "next_start": "2026-08-17",
+    "rating": 4.6,
+    "scholarship_available": True,
+})
+
+COURSES["C201"].update({
+    "mode": "offline",
+    "language": "Song ngữ Việt-Anh",
+    "workload": "6-8 giờ/tuần",
+    "project": "Mô hình dự đoán điểm rủi ro bỏ học",
+    "outcomes": ["Train/test split", "Model evaluation", "Feature engineering"],
+    "next_start": "2026-09-01",
+    "rating": 4.8,
+    "scholarship_available": False,
+})
+
+COURSES["C202"].update({
+    "mode": "online",
+    "language": "Tiếng Việt",
+    "workload": "5 giờ/tuần",
+    "project": "Portfolio cá nhân bằng React",
+    "outcomes": ["Component", "State", "Props", "Deploy frontend"],
+    "next_start": "2026-08-22",
+    "rating": 4.5,
+    "scholarship_available": False,
+})
+
+COURSES["C301"].update({
+    "mode": "hybrid",
+    "language": "Tiếng Anh",
+    "workload": "3-5 giờ/tuần",
+    "project": "AI product brief và risk checklist",
+    "outcomes": ["Product discovery", "AI risk assessment", "Metric design"],
+    "next_start": "2026-09-05",
+    "rating": 4.4,
+    "scholarship_available": True,
+})
+
+COURSES["C103"].update({
+    "mode": "online",
+    "language": "Tiếng Anh",
+    "workload": "2-3 giờ/tuần",
+    "project": "Slide thuyết trình mini research topic",
+    "outcomes": ["Academic reading", "Technical email", "STEM presentation"],
+    "next_start": "2026-08-10",
+    "rating": 4.3,
+    "scholarship_available": False,
+})
+
+
 STUDENTS: dict[str, dict[str, Any]] = {
     "S001": {
         "name": "Nguyễn Minh Anh",
@@ -170,6 +378,52 @@ STUDENTS: dict[str, dict[str, Any]] = {
 }
 
 
+STUDENTS.update({
+    "S004": {
+        "name": "Phạm Gia Hân",
+        "major": "Thiết kế tương tác",
+        "year": "năm hai",
+        "completed_courses": ["Tin học đại cương", "Design Thinking"],
+        "strengths": ["thẩm mỹ", "phỏng vấn người dùng", "thuyết trình"],
+        "career_goal": "Product Designer",
+        "current_schedule": [("Sat", "08:00", "10:00"), ("Tue", "13:30", "15:30")],
+        "preferred_schedule": "cuối tuần",
+        "budget_vnd": 2200000,
+        "learning_style": "thực hành theo project",
+    },
+    "S005": {
+        "name": "Đặng Minh Khang",
+        "major": "Quản trị kinh doanh",
+        "year": "năm ba",
+        "completed_courses": ["Excel cơ bản", "Marketing căn bản", "Thống kê ứng dụng"],
+        "strengths": ["giao tiếp", "kể chuyện", "phân tích thị trường"],
+        "career_goal": "Product Manager",
+        "current_schedule": [("Fri", "18:00", "21:00"), ("Sun", "13:30", "15:30")],
+        "preferred_schedule": "tối trong tuần",
+        "budget_vnd": 2000000,
+        "learning_style": "case study và thảo luận",
+    },
+})
+
+STUDENTS["S001"].update({
+    "preferred_schedule": "tối trong tuần",
+    "budget_vnd": 1800000,
+    "learning_style": "học nền tảng chậm chắc và bài tập nhỏ",
+})
+
+STUDENTS["S002"].update({
+    "preferred_schedule": "cuối tuần",
+    "budget_vnd": 2000000,
+    "learning_style": "case study kinh doanh và dashboard thực tế",
+})
+
+STUDENTS["S003"].update({
+    "preferred_schedule": "tối trong tuần",
+    "budget_vnd": 2600000,
+    "learning_style": "project kỹ thuật và phản hồi code chi tiết",
+})
+
+
 def _to_json(data: Any) -> str:
     """
     Chuyển dữ liệu Python thành chuỗi JSON tiếng Việt dễ đọc.
@@ -180,7 +434,10 @@ def _to_json(data: Any) -> str:
     Returns:
         str: Chuỗi JSON dùng làm Observation cho Agent.
     """
-    return json.dumps(data, ensure_ascii=False, indent=2)
+    try:
+        return json.dumps(data, ensure_ascii=False, indent=2)
+    except Exception as exc:
+        return _error(f"Không thể chuyển dữ liệu sang JSON: {exc}")
 
 
 def _normalize(value: Any) -> str:
@@ -193,7 +450,10 @@ def _normalize(value: Any) -> str:
     Returns:
         str: Chuỗi đã strip khoảng trắng và chuyển sang chữ thường.
     """
-    return str(value).strip().lower()
+    try:
+        return str(value).strip().lower()
+    except Exception:
+        return ""
 
 
 def _get_course(course_id: Any) -> tuple[str | None, dict[str, Any] | None, str | None]:
@@ -208,15 +468,15 @@ def _get_course(course_id: Any) -> tuple[str | None, dict[str, Any] | None, str 
             Gồm mã đã chuẩn hóa, dữ liệu khóa học và thông báo lỗi nếu có.
     """
     if not isinstance(course_id, str):
-        return None, None, "LỖI: Tham số 'course_id' phải là chuỗi."
+        return None, None, _error("Thiếu mã khóa học hoặc mã khóa học không hợp lệ.")
 
     course_id_clean = course_id.strip().upper()
     if not course_id_clean:
-        return None, None, "LỖI: Vui lòng cung cấp mã khóa học."
+        return None, None, _error("Thiếu mã khóa học hoặc mã khóa học không hợp lệ.")
 
     course = COURSES.get(course_id_clean)
     if course is None:
-        return None, None, f"LỖI: Không tìm thấy khóa học có mã '{course_id_clean}'."
+        return None, None, _error(f"Không tìm thấy khóa học có mã '{course_id_clean}'.")
 
     return course_id_clean, course, None
 
@@ -233,15 +493,15 @@ def _get_student(student_id: Any) -> tuple[str | None, dict[str, Any] | None, st
             Gồm mã đã chuẩn hóa, hồ sơ sinh viên và thông báo lỗi nếu có.
     """
     if not isinstance(student_id, str):
-        return None, None, "LỖI: Tham số 'student_id' phải là chuỗi."
+        return None, None, _error("Thiếu mã sinh viên hoặc mã sinh viên không hợp lệ.")
 
     student_id_clean = student_id.strip().upper()
     if not student_id_clean:
-        return None, None, "LỖI: Vui lòng cung cấp mã sinh viên."
+        return None, None, _error("Thiếu mã sinh viên hoặc mã sinh viên không hợp lệ.")
 
     student = STUDENTS.get(student_id_clean)
     if student is None:
-        return None, None, f"LỖI: Không tìm thấy hồ sơ sinh viên '{student_id_clean}'."
+        return None, None, _error(f"Không tìm thấy hồ sơ sinh viên '{student_id_clean}'.")
 
     return student_id_clean, student, None
 
@@ -261,10 +521,12 @@ def _parse_budget(budget: Any) -> tuple[int | None, str | None]:
         return None, None
     if isinstance(budget, (int, float)):
         if budget <= 0:
-            return None, "LỖI: Ngân sách phải lớn hơn 0."
+            return None, _error("Ngân sách không đọc được hoặc không hợp lệ.")
+        if budget <= 100:
+            return int(budget * 1_000_000), None
         return int(budget), None
     if not isinstance(budget, str):
-        return None, "LỖI: Tham số 'budget' phải là số hoặc chuỗi."
+        return None, _error("Ngân sách không đọc được hoặc không hợp lệ.")
 
     text = budget.strip().lower()
     if not text:
@@ -272,13 +534,15 @@ def _parse_budget(budget: Any) -> tuple[int | None, str | None]:
 
     match = re.search(r"(\d+(?:[.,]\d+)?)", text)
     if not match:
-        return None, f"LỖI: Không đọc được ngân sách từ '{budget}'."
+        return None, _error(f"Không đọc được ngân sách từ '{budget}'.")
 
     amount = float(match.group(1).replace(",", "."))
-    if "triệu" in text or "trieu" in text:
+    if "triệu" in text or "trieu" in text or "tri" in text or text.endswith("m"):
         amount *= 1_000_000
     elif "k" in text or "nghìn" in text or "ngan" in text:
         amount *= 1_000
+    elif 0 < amount <= 100:
+        amount *= 1_000_000
 
     return int(amount), None
 
@@ -299,10 +563,10 @@ def _matches_keyword(course: dict[str, Any], keyword: str) -> bool:
 
     text = _normalize(
         " ".join([
-            course["title"],
-            course["description"],
-            " ".join(course["tags"]),
-            " ".join(course["career_goals"]),
+            str(course.get("title", "")),
+            str(course.get("description", "")),
+            " ".join(course.get("tags", [])),
+            " ".join(course.get("career_goals", [])),
         ])
     )
 
@@ -328,17 +592,18 @@ def _matches_schedule(course: dict[str, Any], schedule: str) -> bool:
     if not schedule_norm:
         return True
 
-    schedule_text = _normalize(f"{course['schedule']} {course['schedule_type']}")
+    schedule_type = course.get("schedule_type", "")
+    schedule_text = _normalize(f"{course.get('schedule', '')} {schedule_type}")
     weekend_terms = ["cuối tuần", "cuoi tuan", "thứ bảy", "thu bay", "chủ nhật", "chu nhat", "weekend"]
     evening_terms = ["tối", "toi", "evening"]
     morning_terms = ["sáng", "sang", "morning"]
 
     if any(term in schedule_norm for term in weekend_terms):
-        return "weekend" in course["schedule_type"]
+        return "weekend" in schedule_type
     if any(term in schedule_norm for term in evening_terms):
-        return "evening" in course["schedule_type"]
+        return "evening" in schedule_type
     if any(term in schedule_norm for term in morning_terms):
-        return "morning" in course["schedule_type"]
+        return "morning" in schedule_type
 
     return schedule_norm in schedule_text
 
@@ -353,8 +618,11 @@ def _time_to_minutes(value: str) -> int:
     Returns:
         int: Tổng số phút tính từ 00:00.
     """
-    hour, minute = value.split(":")
-    return int(hour) * 60 + int(minute)
+    try:
+        hour, minute = value.split(":")
+        return int(hour) * 60 + int(minute)
+    except Exception:
+        return -1
 
 
 def _slots_overlap(slot_a: tuple[str, str, str], slot_b: tuple[str, str, str]) -> bool:
@@ -368,11 +636,20 @@ def _slots_overlap(slot_a: tuple[str, str, str], slot_b: tuple[str, str, str]) -
     Returns:
         bool: True nếu cùng ngày và khoảng thời gian giao nhau.
     """
-    day_a, start_a, end_a = slot_a
-    day_b, start_b, end_b = slot_b
+    try:
+        day_a, start_a, end_a = slot_a
+        day_b, start_b, end_b = slot_b
+    except Exception:
+        return False
     if day_a != day_b:
         return False
-    return _time_to_minutes(start_a) < _time_to_minutes(end_b) and _time_to_minutes(start_b) < _time_to_minutes(end_a)
+    start_a_minutes = _time_to_minutes(start_a)
+    end_a_minutes = _time_to_minutes(end_a)
+    start_b_minutes = _time_to_minutes(start_b)
+    end_b_minutes = _time_to_minutes(end_b)
+    if min(start_a_minutes, end_a_minutes, start_b_minutes, end_b_minutes) < 0:
+        return False
+    return start_a_minutes < end_b_minutes and start_b_minutes < end_a_minutes
 
 
 def _missing_prerequisites(student: dict[str, Any], course: dict[str, Any]) -> list[str]:
@@ -386,8 +663,8 @@ def _missing_prerequisites(student: dict[str, Any], course: dict[str, Any]) -> l
     Returns:
         list[str]: Danh sách prerequisite chưa có trong hồ sơ sinh viên.
     """
-    completed = {_normalize(item) for item in student["completed_courses"]}
-    return [item for item in course["prerequisites"] if _normalize(item) not in completed]
+    completed = {_normalize(item) for item in student.get("completed_courses", [])}
+    return [item for item in course.get("prerequisites", []) if _normalize(item) not in completed]
 
 
 def _schedule_conflicts(student: dict[str, Any], course: dict[str, Any]) -> list[dict[str, str]]:
@@ -402,14 +679,124 @@ def _schedule_conflicts(student: dict[str, Any], course: dict[str, Any]) -> list
         list[dict[str, str]]: Danh sách cặp khung giờ bị trùng.
     """
     conflicts = []
-    for course_slot in course["slots"]:
-        for student_slot in student["current_schedule"]:
+    for course_slot in course.get("slots", []):
+        for student_slot in student.get("current_schedule", []):
             if _slots_overlap(course_slot, student_slot):
                 conflicts.append({
                     "course_slot": f"{course_slot[0]} {course_slot[1]}-{course_slot[2]}",
                     "student_slot": f"{student_slot[0]} {student_slot[1]}-{student_slot[2]}",
                 })
     return conflicts
+
+
+def _fee_category(fee: Any) -> str:
+    """
+    Phân loại học phí để output dễ đọc hơn.
+
+    Args:
+        fee (Any): Học phí VND.
+
+    Returns:
+        str: Nhóm học phí thấp, trung bình hoặc cao.
+    """
+    try:
+        fee_number = int(fee)
+    except Exception:
+        return "Chưa rõ"
+    if fee_number <= 1_500_000:
+        return "Thấp"
+    if fee_number <= 2_200_000:
+        return "Trung bình"
+    return "Cao"
+
+
+def _course_summary(course_id: str, course: dict[str, Any]) -> dict[str, Any]:
+    """
+    Tạo bản tóm tắt khóa học giàu thông tin cho search_courses.
+
+    Args:
+        course_id (str): Mã khóa học.
+        course (dict[str, Any]): Dữ liệu khóa học.
+
+    Returns:
+        dict[str, Any]: Payload tóm tắt có nhiều trường để Agent tư vấn tốt hơn.
+    """
+    fee = course.get("fee", 0)
+    return {
+        "course_id": course_id,
+        "title": course.get("title", "Chưa cập nhật tên khóa học"),
+        "level": course.get("level", "Chưa cập nhật"),
+        "fee_vnd": fee,
+        "fee_category": _fee_category(fee),
+        "duration": course.get("duration", "Chưa cập nhật"),
+        "schedule": course.get("schedule", "Chưa cập nhật"),
+        "schedule_type": course.get("schedule_type", "Chưa cập nhật"),
+        "mode": course.get("mode", "offline"),
+        "language": course.get("language", "Tiếng Việt"),
+        "workload": course.get("workload", "Chưa cập nhật"),
+        "project": course.get("project", "Bài tập thực hành cuối khóa"),
+        "next_start": course.get("next_start", "Chưa cập nhật"),
+        "rating": course.get("rating", "Chưa có đánh giá"),
+        "scholarship_available": course.get("scholarship_available", False),
+        "capacity_status": course.get("capacity_status", "Chưa cập nhật"),
+        "skills": course.get("outcomes", course.get("tags", [])),
+    }
+
+
+def _course_detail_payload(course_id: str, course: dict[str, Any]) -> dict[str, Any]:
+    """
+    Tạo payload chi tiết khóa học với dữ liệu đa dạng.
+
+    Args:
+        course_id (str): Mã khóa học.
+        course (dict[str, Any]): Dữ liệu khóa học.
+
+    Returns:
+        dict[str, Any]: Payload chi tiết dùng trong get_course_detail.
+    """
+    payload = _course_summary(course_id, course)
+    payload.update({
+        "status": "success",
+        "description": course.get("description", "Chưa cập nhật mô tả."),
+        "instructor": course.get("instructor", "Chưa cập nhật giảng viên"),
+        "prerequisites": course.get("prerequisites", []),
+        "certificate": course.get("certificate", "Chưa cập nhật chứng chỉ"),
+        "majors": course.get("majors", []),
+        "year_fit": course.get("year_fit", []),
+        "career_goals": course.get("career_goals", []),
+        "tags": course.get("tags", []),
+    })
+    return payload
+
+
+def _student_profile_payload(student_id: str, student: dict[str, Any]) -> dict[str, Any]:
+    """
+    Tạo payload hồ sơ sinh viên giàu thông tin hơn.
+
+    Args:
+        student_id (str): Mã sinh viên.
+        student (dict[str, Any]): Hồ sơ sinh viên.
+
+    Returns:
+        dict[str, Any]: Payload hồ sơ dùng trong get_student_profile.
+    """
+    return {
+        "status": "success",
+        "student_id": student_id,
+        "name": student.get("name", "Chưa cập nhật"),
+        "major": student.get("major", "Chưa cập nhật"),
+        "year": student.get("year", "Chưa cập nhật"),
+        "completed_courses": student.get("completed_courses", []),
+        "strengths": student.get("strengths", []),
+        "career_goal": student.get("career_goal", "Chưa cập nhật"),
+        "current_schedule": [
+            f"{day} {start}-{end}"
+            for day, start, end in student.get("current_schedule", [])
+        ],
+        "preferred_schedule": student.get("preferred_schedule", "Chưa cập nhật"),
+        "budget_vnd": student.get("budget_vnd", "Chưa cập nhật"),
+        "learning_style": student.get("learning_style", "Chưa cập nhật"),
+    }
 
 
 def search_courses(
@@ -481,7 +868,7 @@ def search_courses(
             "schedule": schedule,
         }.items():
             if not isinstance(value, str):
-                return f"LỖI: Tham số '{name}' phải là chuỗi."
+                return _error(f"Sai kiểu dữ liệu cho tham số '{name}'.")
 
         max_budget, budget_error = _parse_budget(budget)
         if budget_error:
@@ -496,32 +883,37 @@ def search_courses(
         for course_id, course in COURSES.items():
             if not _matches_keyword(course, keyword_norm):
                 continue
-            if major_norm and "all" not in course["majors"] and not any(major_norm in _normalize(item) for item in course["majors"]):
+            course_majors = course.get("majors", [])
+            course_level = course.get("level", "")
+            course_year_fit = course.get("year_fit", [])
+            course_goals = course.get("career_goals", [])
+            course_fee = course.get("fee", 0)
+            try:
+                course_fee_number = int(course_fee)
+            except Exception:
+                course_fee_number = 0
+
+            if major_norm and "all" not in course_majors and not any(major_norm in _normalize(item) for item in course_majors):
                 continue
-            if level_norm and level_norm not in _normalize(course["level"]) and not any(level_norm in _normalize(item) for item in course["year_fit"]):
+            if level_norm and level_norm not in _normalize(course_level) and not any(level_norm in _normalize(item) for item in course_year_fit):
                 continue
-            if career_norm and "all" not in course["career_goals"] and not any(career_norm in _normalize(item) for item in course["career_goals"]):
+            if career_norm and "all" not in course_goals and not any(career_norm in _normalize(item) for item in course_goals):
                 continue
-            if max_budget is not None and course["fee"] > max_budget:
+            if max_budget is not None and course_fee_number > max_budget:
                 continue
             if not _matches_schedule(course, schedule):
                 continue
 
-            results.append({
-                "course_id": course_id,
-                "title": course["title"],
-                "level": course["level"],
-                "fee_vnd": course["fee"],
-                "schedule": course["schedule"],
-                "capacity_status": course["capacity_status"],
-            })
+            summary = _course_summary(course_id, course)
+            summary["match_reason"] = "Khớp với các tiêu chí tìm kiếm đã cung cấp."
+            results.append(summary)
 
         if not results:
-            return "LỖI: Không tìm thấy khóa học phù hợp với tiêu chí hiện tại."
+            return _error("Không tìm thấy khóa học phù hợp với tiêu chí hiện tại.")
 
         return _to_json({"status": "success", "count": len(results), "courses": results})
     except Exception as exc:
-        return f"LỖI: Tool search_courses gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool search_courses gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def get_course_detail(course_id: str = "") -> str:
@@ -572,21 +964,9 @@ def get_course_detail(course_id: str = "") -> str:
         if error:
             return error
 
-        return _to_json({
-            "status": "success",
-            "course_id": course_id_clean,
-            "title": course["title"],
-            "description": course["description"],
-            "fee_vnd": course["fee"],
-            "duration": course["duration"],
-            "instructor": course["instructor"],
-            "prerequisites": course["prerequisites"],
-            "certificate": course["certificate"],
-            "schedule": course["schedule"],
-            "capacity_status": course["capacity_status"],
-        })
+        return _to_json(_course_detail_payload(course_id_clean, course))
     except Exception as exc:
-        return f"LỖI: Tool get_course_detail gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool get_course_detail gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def get_student_profile(student_id: str = "") -> str:
@@ -636,19 +1016,9 @@ def get_student_profile(student_id: str = "") -> str:
         if error:
             return error
 
-        return _to_json({
-            "status": "success",
-            "student_id": student_id_clean,
-            "name": student["name"],
-            "major": student["major"],
-            "year": student["year"],
-            "completed_courses": student["completed_courses"],
-            "strengths": student["strengths"],
-            "career_goal": student["career_goal"],
-            "current_schedule": [f"{day} {start}-{end}" for day, start, end in student["current_schedule"]],
-        })
+        return _to_json(_student_profile_payload(student_id_clean, student))
     except Exception as exc:
-        return f"LỖI: Tool get_student_profile gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool get_student_profile gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def check_prerequisite(student_id: str = "", course_id: str = "") -> str:
@@ -710,7 +1080,18 @@ def check_prerequisite(student_id: str = "", course_id: str = "") -> str:
             "student_id": student_id_clean,
             "course_id": course_id_clean,
             "eligible": not missing,
+            "course_title": course.get("title", "Chưa cập nhật"),
+            "student_completed_courses": student.get("completed_courses", []),
+            "required_prerequisites": course.get("prerequisites", []),
             "missing_prerequisites": missing,
+            "suggested_preparation": (
+                []
+                if not missing
+                else [
+                    "Học khóa nền tảng phù hợp trước khi đăng ký.",
+                    "Trao đổi với cố vấn nếu đã có kinh nghiệm tương đương ngoài lớp học.",
+                ]
+            ),
             "message": (
                 "Sinh viên đủ điều kiện đầu vào."
                 if not missing
@@ -718,7 +1099,7 @@ def check_prerequisite(student_id: str = "", course_id: str = "") -> str:
             ),
         })
     except Exception as exc:
-        return f"LỖI: Tool check_prerequisite gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool check_prerequisite gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def check_schedule_conflict(student_id: str = "", course_id: str = "") -> str:
@@ -778,12 +1159,23 @@ def check_schedule_conflict(student_id: str = "", course_id: str = "") -> str:
             "status": "success",
             "student_id": student_id_clean,
             "course_id": course_id_clean,
+            "course_title": course.get("title", "Chưa cập nhật"),
+            "course_schedule": course.get("schedule", "Chưa cập nhật"),
+            "student_current_schedule": [
+                f"{day} {start}-{end}"
+                for day, start, end in student.get("current_schedule", [])
+            ],
             "has_conflict": bool(conflicts),
             "conflicts": conflicts,
+            "suggested_action": (
+                "Chọn khóa khác hoặc chuyển cho cố vấn học tập nếu sinh viên vẫn muốn học khóa này."
+                if conflicts
+                else "Có thể tiếp tục kiểm tra điều kiện đầu vào hoặc bước xác nhận đăng ký."
+            ),
             "message": "Khóa học bị trùng lịch." if conflicts else "Không phát hiện trùng lịch.",
         })
     except Exception as exc:
-        return f"LỖI: Tool check_schedule_conflict gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool check_schedule_conflict gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def register_course(student_id: str = "", course_id: str = "") -> str:
@@ -841,29 +1233,36 @@ def register_course(student_id: str = "", course_id: str = "") -> str:
         if course_error:
             return course_error
 
-        if "hết" in _normalize(course["capacity_status"]):
-            return f"LỖI: Khóa học '{course_id_clean}' hiện đã hết chỗ."
+        if "hết" in _normalize(course.get("capacity_status", "")):
+            return _error(f"Khóa học '{course_id_clean}' hiện đã hết chỗ.")
 
         missing = _missing_prerequisites(student, course)
         if missing:
-            return "LỖI: Chưa thể đăng ký vì sinh viên còn thiếu điều kiện đầu vào: " + ", ".join(missing) + "."
+            return _error("Chưa thể đăng ký vì sinh viên còn thiếu điều kiện đầu vào: " + ", ".join(missing) + ".")
 
         conflicts = _schedule_conflicts(student, course)
         if conflicts:
-            return "LỖI: Chưa thể đăng ký vì khóa học bị trùng lịch học hiện tại của sinh viên."
+            return _error("Chưa thể đăng ký vì khóa học bị trùng lịch học hiện tại của sinh viên.")
 
         return _to_json({
             "status": "registered_mock",
+            "registration_id": f"REG-{student_id_clean}-{course_id_clean}",
             "message": "Đăng ký khóa học thành công trong môi trường mô phỏng.",
             "student_id": student_id_clean,
-            "student_name": student["name"],
+            "student_name": student.get("name", "Chưa cập nhật"),
             "course_id": course_id_clean,
-            "course_title": course["title"],
-            "fee_vnd": course["fee"],
-            "schedule": course["schedule"],
+            "course_title": course.get("title", "Chưa cập nhật"),
+            "fee_vnd": course.get("fee", "Chưa cập nhật"),
+            "fee_category": _fee_category(course.get("fee", 0)),
+            "schedule": course.get("schedule", "Chưa cập nhật"),
+            "mode": course.get("mode", "offline"),
+            "next_start": course.get("next_start", "Chưa cập nhật"),
+            "certificate": course.get("certificate", "Chưa cập nhật"),
+            "payment_note": "Học phí được ghi nhận ở trạng thái chờ thanh toán trong môi trường mô phỏng.",
+            "recommended_next_action": "Có thể gọi create_learning_reminder nếu sinh viên muốn được nhắc học.",
         })
     except Exception as exc:
-        return f"LỖI: Tool register_course gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool register_course gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def create_learning_reminder(student_id: str = "", course_id: str = "", reminder_time: str = "") -> str:
@@ -920,23 +1319,26 @@ def create_learning_reminder(student_id: str = "", course_id: str = "", reminder
         if course_error:
             return course_error
         if not isinstance(reminder_time, str):
-            return "LỖI: Tham số 'reminder_time' phải là chuỗi."
+            return _error("Thiếu tham số hoặc sai dữ liệu cho 'reminder_time'.")
         reminder_time_clean = reminder_time.strip()
         if not reminder_time_clean:
-            return "LỖI: Vui lòng cung cấp thời gian nhắc học."
+            return _error("Thiếu tham số reminder_time.")
 
         return _to_json({
             "status": "reminder_created_mock",
+            "reminder_id": f"REM-{student_id_clean}-{course_id_clean}",
             "message": "Đã tạo nhắc học trong môi trường mô phỏng.",
             "student_id": student_id_clean,
-            "student_name": student["name"],
+            "student_name": student.get("name", "Chưa cập nhật"),
             "course_id": course_id_clean,
-            "course_title": course["title"],
-            "course_schedule": course["schedule"],
+            "course_title": course.get("title", "Chưa cập nhật"),
+            "course_schedule": course.get("schedule", "Chưa cập nhật"),
             "reminder_time": reminder_time_clean,
+            "channels": ["in_app", "email_mock"],
+            "timezone": "Asia/Saigon",
         })
     except Exception as exc:
-        return f"LỖI: Tool create_learning_reminder gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool create_learning_reminder gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def handoff_to_advisor(student_id: str = "", reason: str = "", conversation_summary: str = "") -> str:
@@ -992,9 +1394,9 @@ def handoff_to_advisor(student_id: str = "", reason: str = "", conversation_summ
             "conversation_summary": conversation_summary,
         }.items():
             if not isinstance(value, str):
-                return f"LỖI: Tham số '{name}' phải là chuỗi."
+                return _error(f"Thiếu tham số hoặc sai kiểu dữ liệu cho '{name}'.")
             if not value.strip():
-                return f"LỖI: Vui lòng cung cấp '{name}'."
+                return _error(f"Thiếu tham số '{name}'.")
 
         student_id_clean = student_id.strip().upper()
         student_name = STUDENTS.get(student_id_clean, {}).get("name", "Sinh viên chưa xác thực hồ sơ")
@@ -1004,12 +1406,15 @@ def handoff_to_advisor(student_id: str = "", reason: str = "", conversation_summ
             "ticket_id": f"ADV-{student_id_clean}-001",
             "student_id": student_id_clean,
             "student_name": student_name,
+            "student_profile_found": student_id_clean in STUDENTS,
+            "priority": "high" if any(word in _normalize(reason) for word in ["khiếu nại", "hoàn tiền", "khẩn", "complaint", "refund"]) else "normal",
             "reason": reason.strip(),
             "conversation_summary": conversation_summary.strip(),
             "next_step": "Tư vấn viên sẽ xem xét và phản hồi trong vòng 1 ngày làm việc.",
+            "recommended_channel": "academic_advisor_queue",
         })
     except Exception as exc:
-        return f"LỖI: Tool handoff_to_advisor gặp sự cố khi xử lý yêu cầu: {exc}"
+        return _error(f"Tool handoff_to_advisor gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 def compare_courses(course_ids: str | list[str] = "") -> str:
@@ -1062,108 +1467,38 @@ def compare_courses(course_ids: str | list[str] = "") -> str:
         elif isinstance(course_ids, (list, tuple, set)):
             ids = [str(item).strip().upper() for item in course_ids if str(item).strip()]
         else:
-            return "LỖI: Tham số 'course_ids' phải là chuỗi hoặc danh sách mã khóa học."
+            return _error("Thiếu mã khóa học hoặc danh sách mã khóa học không hợp lệ.")
 
         if len(ids) < 2:
-            return "LỖI: Cần ít nhất 2 mã khóa học để so sánh."
+            return _error("Cần ít nhất 2 mã khóa học để so sánh.")
 
         unknown_ids = [course_id for course_id in ids if course_id not in COURSES]
         if unknown_ids:
-            return f"LỖI: Không tìm thấy các khóa học: {', '.join(unknown_ids)}."
+            return _error(f"Không tìm thấy các khóa học: {', '.join(unknown_ids)}.")
 
         comparisons = []
         for course_id in ids:
             course = COURSES[course_id]
-            comparisons.append({
-                "course_id": course_id,
-                "title": course["title"],
-                "level": course["level"],
-                "fee_vnd": course["fee"],
-                "duration": course["duration"],
-                "schedule": course["schedule"],
-                "prerequisites": course["prerequisites"],
-                "certificate": course["certificate"],
-                "career_goals": course["career_goals"],
-            })
+            comparisons.append(_course_detail_payload(course_id, course))
 
-        cheapest = min(ids, key=lambda item: COURSES[item]["fee"])
+        cheapest = min(ids, key=lambda item: int(COURSES[item].get("fee", 0)))
         return _to_json({
             "status": "success",
             "courses": comparisons,
-            "quick_note": f"Khóa có học phí thấp nhất là {cheapest} - {COURSES[cheapest]['title']}.",
+            "quick_note": f"Khóa có học phí thấp nhất là {cheapest} - {COURSES[cheapest].get('title', 'Chưa cập nhật')}.",
+            "comparison_axes": [
+                "học phí",
+                "trình độ",
+                "lịch học",
+                "workload",
+                "project cuối khóa",
+                "prerequisite",
+                "chứng chỉ",
+                "học bổng",
+            ],
         })
     except Exception as exc:
-        return f"LỖI: Tool compare_courses gặp sự cố khi xử lý yêu cầu: {exc}"
-
-
-# Giữ 2 tên tool cũ để src/app.py hiện tại chưa bị lỗi import trước khi Role 4 cập nhật.
-def get_weather(location: str = "") -> str:
-    """
-    Tool legacy của đề du lịch cũ, không dùng cho đề số 7.
-
-    Name:
-        get_weather
-
-    Purpose:
-        Giữ tên hàm cũ để src/app.py chưa cập nhật không bị lỗi import.
-
-    When to use:
-        Không dùng trong đề "Trợ lý tư vấn khóa học sinh viên".
-
-    Input schema:
-        location (str): Tham số cũ, được bỏ qua trong đề số 7.
-
-    Output schema:
-        str: Chuỗi "LỖI:" hướng Agent chuyển sang tool khóa học phù hợp.
-
-    Error semantics:
-        Luôn trả về thông báo lỗi an toàn, không gọi dữ liệu thời tiết.
-
-    Side effects:
-        Không thay đổi dữ liệu.
-
-    Example:
-        get_weather("Hà Nội")
-
-    Safety:
-        Hàm luôn trả về str và không crash.
-    """
-    return "LỖI: get_weather là tool của đề du lịch cũ. Đề số 7 hãy dùng search_courses hoặc get_course_detail."
-
-
-def search_flights(origin: str = "", destination: str = "") -> str:
-    """
-    Tool legacy của đề du lịch cũ, không dùng cho đề số 7.
-
-    Name:
-        search_flights
-
-    Purpose:
-        Giữ tên hàm cũ để src/app.py chưa cập nhật không bị lỗi import.
-
-    When to use:
-        Không dùng trong đề "Trợ lý tư vấn khóa học sinh viên".
-
-    Input schema:
-        origin (str): Tham số cũ, được bỏ qua trong đề số 7.
-        destination (str): Tham số cũ, được bỏ qua trong đề số 7.
-
-    Output schema:
-        str: Chuỗi "LỖI:" hướng Agent chuyển sang tool khóa học phù hợp.
-
-    Error semantics:
-        Luôn trả về thông báo lỗi an toàn, không gọi dữ liệu chuyến bay.
-
-    Side effects:
-        Không thay đổi dữ liệu.
-
-    Example:
-        search_flights("TP.HCM", "Hà Nội")
-
-    Safety:
-        Hàm luôn trả về str và không crash.
-    """
-    return "LỖI: search_flights là tool của đề du lịch cũ. Đề số 7 hãy dùng search_courses hoặc register_course."
+        return _error(f"Tool compare_courses gặp sự cố khi xử lý yêu cầu: {exc}")
 
 
 AVAILABLE_TOOLS = {
